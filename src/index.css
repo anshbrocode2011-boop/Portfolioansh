@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom utilities for glassmorphism + theme */
+:root{
+  --accent1: #00c2ff;
+  --accent2: #7c4dff;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.06);
+}
+body{font-family:theme('fontFamily.sans');background:linear-gradient(180deg,#050507 0%, #07070a 100%);-webkit-font-smoothing:antialiased}
+
+/* Glass card */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+}
+
+/* Cursor */
+#cursor-dot, #cursor-follower {
+  position: fixed;
+  pointer-events: none;
+  transform: translate(-50%,-50%);
+  z-index: 9999;
+}
+#cursor-dot {
+  width: 10px; height: 10px; border-radius:50%;
+  background: var(--accent1); box-shadow: 0 0 16px rgba(0,194,255,0.9);
+}
+#cursor-follower {
+  width: 40px; height: 40px; border-radius:50%;
+  border: 1px solid rgba(124,77,255,0.6); box-shadow: 0 10px 40px rgba(124,77,255,0.06);
+}
+
+/* Loader overlay */
+#loader {
+  position: fixed; inset: 0; display:flex;align-items:center;justify-content:center;
+  background: linear-gradient(180deg, rgba(2,2,5,0.96), rgba(8,6,14,0.88));
+  z-index: 9998;backdrop-filter: blur(8px);
+}
+
+/* Progress bar */
+#progress { position: fixed; top: 0; left:0; height:3px; width:100%; z-index:9997; background:transparent; }
+#progress > div { height:100%; width:0; background:linear-gradient(90deg,var(--accent2),var(--accent1)); box-shadow:0 4px 20px rgba(0,194,255,0.12) }
+
+/* Magnetic helper */
+.magnetic { transition: transform 220ms cubic-bezier(.2,.9,.3,1) }
+
+/* Reveal classes (JS toggles .is-visible) */
+.reveal { opacity:0; transform: translateY(18px); transition: opacity 650ms, transform 650ms; }
+.reveal.is-visible { opacity:1; transform: none; }
+
+/* Utility tweaks */
+a { color: inherit; }
