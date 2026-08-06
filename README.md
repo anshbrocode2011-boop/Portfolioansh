@@ -11,3 +11,7 @@ Quick commands:
 Add projects: edit src/data/projects.js
 
 Contact form: mailto fallback included. Replace with an API (SendGrid, Formspree, Netlify Forms) for production.
+
+---
+
+Redeploy trigger: updated README to force Vercel to pick latest package.json.
