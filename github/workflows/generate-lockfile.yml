@@ -1,0 +1,88 @@
+name: Generate package-lock
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Source branch to read (where package.json lives)'
+        required: true
+        default: 'add-starter-site'
+      lock_branch:
+        description: 'Target branch to push generated package-lock.json'
+        required: true
+        default: 'add-starter-site-lock'
+      subdir:
+        description: 'Optional subdirectory where package.json lives (leave empty to auto-detect)'
+        required: false
+        default: ''
+
+jobs:
+  generate-lock:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Setup Node.js (20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Locate project directory
+        id: finddir
+        run: |
+          if [ -n "${{ github.event.inputs.subdir }}" ]; then
+            echo "WORKDIR=${{ github.event.inputs.subdir }}" >> $GITHUB_ENV
+            echo "Found explicit subdir: ${{ github.event.inputs.subdir }}"
+            exit 0
+          fi
+
+          # If package.json is at repo root, use that. Otherwise try to find file via git.
+          if [ -f package.json ]; then
+            echo "WORKDIR=." >> $GITHUB_ENV
+            echo "package.json found at repo root"
+          else
+            PG=$(git ls-files -- ':!node_modules' | grep -E '(^|/)(package.json)$' | head -n1 || true)
+            if [ -n "$PG" ]; then
+              DIR=$(dirname "$PG")
+              echo "WORKDIR=$DIR" >> $GITHUB_ENV
+              echo "package.json found at $DIR"
+            else
+              echo "No package.json found in repository." >&2
+              exit 1
+            fi
+          fi
+
+      - name: Show working directory
+        run: |
+          echo "Working directory: $WORKDIR"
+        env:
+          WORKDIR: ${{ env.WORKDIR }}
+
+      - name: Clean and install (generate package-lock.json)
+        run: |
+          set -e
+          cd "$WORKDIR"
+          rm -rf node_modules package-lock.json || true
+          npm install
+        env:
+          WORKDIR: ${{ env.WORKDIR }}
+
+      - name: Commit package-lock.json to lock branch if changed
+        env:
+          LOCK_BRANCH: ${{ github.event.inputs.lock_branch }}
+        run: |
+          cd "$WORKDIR"
+          if [ -f package-lock.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            # Create a branch from the current commit (safe with protected branches)
+            git rev-parse --verify "${LOCK_BRANCH}" >/dev/null 2>&
+
